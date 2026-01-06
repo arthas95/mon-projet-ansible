@@ -1,0 +1,33 @@
+---
+- name: Mettre à jour APT
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Installer APACHE + PHP
+  ansible.builtin.package:
+    name:
+      - apache2
+      - php
+      - libapache2-mod-php
+    state: present
+
+- name: Déployer l'application php
+  ansible.builtin.template:
+    src: index.php.j2
+    dest: /var/www/html/index.php
+    owner: www-data
+    group: www-data
+    mode: "0644"
+
+- name: Configurer DocumentRoot vers /var/www/joomla
+  ansible.builtin.lineinfile:
+    path: /etc/apache2/sites-available/000-default.conf
+    regexp: '^\s*DocumentRoot'
+    line: '        DocumentRoot /var/www/joomla'
+    backup: yes
+  notify: Reload Apache
+- name: Reload Apache
+  ansible.builtin.service:
+    name: apache2
+    state: reloaded

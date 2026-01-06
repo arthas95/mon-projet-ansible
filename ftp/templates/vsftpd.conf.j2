@@ -1,0 +1,34 @@
+# Écoute sur IPv4
+listen=YES
+listen_ipv6=NO
+
+# Pas d'accès anonyme
+anonymous_enable=NO
+
+# Autoriser les utilisateurs locaux
+local_enable=YES
+write_enable=YES
+
+# Chrooter les utilisateurs dans leur home
+chroot_local_user=YES
+allow_writeable_chroot=YES
+
+# Utiliser le port 21 standard
+connect_from_port_20=YES
+
+# Logs
+xferlog_enable=YES
+xferlog_file=/var/log/vsftpd.log
+
+# Sécurité : liste d'utilisateurs autorisés (optionnel)
+userlist_enable=YES
+userlist_deny=NO
+userlist_file=/etc/vsftpd.userlist
+
+# Passive mode (pour NAT/firewall)
+pasv_enable=YES
+pasv_min_port=40000
+pasv_max_port=50000
+
+# Banner
+ftpd_banner=Welcome to {{ ansible_hostname }} FTP service.

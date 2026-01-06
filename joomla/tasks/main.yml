@@ -1,0 +1,24 @@
+---
+- name: Créer le répertoire Joomla
+  ansible.builtin.file:
+    path: "{{ joomla_root }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Télécharger l'archive Joomla
+  ansible.builtin.get_url:
+    url: "{{ joomla_download_url }}"
+    dest: "/tmp/joomla.tar.gz"
+    mode: "0644"
+  register: joomla_download
+
+- name: Déployer Joomla
+  ansible.builtin.unarchive:
+    src: "/tmp/joomla.tar.gz"
+    dest: "{{ joomla_root }}"
+    remote_src: yes
+    owner: www-data
+    group: www-data
+  when: joomla_download.changed

@@ -1,0 +1,47 @@
+---
+- name: Installer vsftpd
+  ansible.builtin.package:
+    name: vsftpd
+    state: present
+
+- name: Configurer vsftpd
+  ansible.builtin.template:
+    src: vsftpd.conf.j2
+    dest: /etc/vsftpd.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: yes
+  notify: Restart vsftpd
+
+- name: Activer et demarrer vsftpd
+  ansible.builtin.service:
+    name: vsftpd
+    state: started
+    enabled: yes
+
+- name: Créer utilisateur FTP dédié
+  ansible.builtin.user:
+    name: ftpuser
+    home: /var/www/joomla
+    shell: /bin/bash
+    password: "{{ 'ftppass123' | password_hash('sha512') }}"
+    state: present
+
+- name: Donner les droits à ftpuser sur /var/www/joomla
+  ansible.builtin.file:
+    path: /var/www/joomla
+    owner: ftpuser
+    group: www-data
+    recurse: yes
+    state: directory
+
+- name: Créer le fichier userlist pour vsftpd
+  ansible.builtin.copy:
+    dest: /etc/vsftpd.userlist
+    content: |
+      ftpuser
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart vsftpd
