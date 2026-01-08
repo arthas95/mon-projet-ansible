@@ -1,0 +1,32 @@
+---
+- name: Installer OpenSSL
+  ansible.builtin.package:
+    name: openssl
+    state: present
+
+- name: Créer le répertoire pour les certificats
+  ansible.builtin.file:
+    path: /etc/ssl/private
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Générer une clé privée RSA 2048 bits
+  ansible.builtin.command:
+    cmd: openssl genrsa -out /etc/ssl/private/apache-selfsigned.key 2048
+    creates: /etc/ssl/private/apache-selfsigned.key
+
+- name: Générer un certificat auto-signé (valide 365 jours)
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new -x509 -key /etc/ssl/private/apache-selfsigned.key
+      -out /etc/ssl/certs/apache-selfsigned.crt -days 365
+      -subj "/C=FR/ST=IDF/L=Paris/O=SadekIT/CN={{ ansible_default_ipv4.address }}"
+    creates: /etc/ssl/certs/apache-selfsigned.crt
+
+- name: Activer le module SSL Apache
+  ansible.builtin.command:
+    cmd: a2enmod ssl
+    creates: /etc/apache2/mods-enabled/ssl.load
+  notify: Reload Apache

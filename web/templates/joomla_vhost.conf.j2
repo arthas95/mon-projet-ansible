@@ -1,0 +1,36 @@
+<VirtualHost *:80>
+    ServerAdmin admin@localhost
+    DocumentRoot /var/www/joomla
+
+    # Redirection forcée vers HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    <Directory /var/www/joomla>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/joomla_error.log
+    CustomLog ${APACHE_LOG_DIR}/joomla_access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerAdmin admin@localhost
+    DocumentRoot /var/www/joomla
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/apache-selfsigned.crt
+    SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
+
+    <Directory /var/www/joomla>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/joomla_ssl_error.log
+    CustomLog ${APACHE_LOG_DIR}/joomla_ssl_access.log combined
+</VirtualHost>

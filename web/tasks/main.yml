@@ -1,10 +1,10 @@
 ---
-- name: Mettre à jour APT
+- name: Mettre à jour le cache APT
   ansible.builtin.apt:
     update_cache: yes
   when: ansible_os_family == "Debian"
 
-- name: Installer APACHE + PHP
+- name: Installer Apache + PHP
   ansible.builtin.package:
     name:
       - apache2
@@ -12,22 +12,36 @@
       - libapache2-mod-php
     state: present
 
-- name: Déployer l'application php
-  ansible.builtin.template:
-    src: index.php.j2
-    dest: /var/www/html/index.php
-    owner: www-data
-    group: www-data
-    mode: "0644"
-
-- name: Configurer DocumentRoot vers /var/www/joomla
-  ansible.builtin.lineinfile:
-    path: /etc/apache2/sites-available/000-default.conf
-    regexp: '^\s*DocumentRoot'
-    line: '        DocumentRoot /var/www/joomla'
-    backup: yes
-  notify: Reload Apache
-- name: Reload Apache
+- name: Activer et démarrer Apache
   ansible.builtin.service:
     name: apache2
-    state: reloaded
+    state: started
+    enabled: yes
+
+- name: Activer le module rewrite Apache
+  ansible.builtin.command:
+    cmd: a2enmod rewrite
+    creates: /etc/apache2/mods-enabled/rewrite.load
+  notify: Reload Apache
+
+- name: Déployer le VirtualHost Joomla
+  ansible.builtin.template:
+    src: joomla_vhost.conf.j2
+    dest: /etc/apache2/sites-available/joomla.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload Apache
+
+- name: Désactiver le site par défaut
+  ansible.builtin.command:
+    cmd: a2dissite 000-default.conf
+    removes: /etc/apache2/sites-enabled/000-default.conf
+  notify: Reload Apache
+
+- name: Activer le site Joomla
+  ansible.builtin.command:
+    cmd: a2ensite joomla.conf
+    creates: /etc/apache2/sites-enabled/joomla.conf
+  notify: Reload Apache
+
